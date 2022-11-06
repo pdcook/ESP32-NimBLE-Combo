@@ -1,6 +1,6 @@
 #ifndef ESP32_BLE_COMBO_MOUSE_H
 #define ESP32_BLE_COMBO_MOUSE_H
-#include "BleComboKeyboard.h"
+#include "NimBleComboKeyboard.h"
 
 #define MOUSE_LEFT 1
 #define MOUSE_RIGHT 2

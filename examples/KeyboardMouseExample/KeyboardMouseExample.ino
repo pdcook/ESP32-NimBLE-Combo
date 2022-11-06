@@ -4,7 +4,7 @@
  * then moves and the scrolls the mouse and clicks it.
  */
  
-#include <BleCombo.h>
+#include <NimBleCombo.h>
 
 void setup() {
   Serial.begin(115200);

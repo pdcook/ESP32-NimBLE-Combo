@@ -1,15 +1,25 @@
+#define USE_NIMBLE
+
+#include "NimBleComboKeyboard.h"
+#include "NimBleConnectionStatus.h"
+#include "KeyboardOutputCallbacks.h"
+
+#if defined(USE_NIMBLE)
+#include <NimBLEDevice.h>
+#include <NimBLEServer.h>
+#include <NimBLEUtils.h>
+#include <NimBLEHIDDevice.h>
+#else
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include "BLE2902.h"
 #include "BLEHIDDevice.h"
+#endif // USE_NIMBLE
+
 #include "HIDTypes.h"
 #include <driver/adc.h>
 #include "sdkconfig.h"
-
-#include "BleConnectionStatus.h"
-#include "KeyboardOutputCallbacks.h"
-#include "BleComboKeyboard.h"
 
 #if defined(CONFIG_ARDUHAL_ESP_LOG)
   #include "esp32-hal-log.h"
@@ -181,9 +191,16 @@ void BleComboKeyboard::taskServer(void* pvParameter) {
   bleKeyboardInstance->hid->pnp(0x02, 0xe502, 0xa111, 0x0210);
   bleKeyboardInstance->hid->hidInfo(0x00,0x01);
 
-  BLESecurity *pSecurity = new BLESecurity();
+#if defined(USE_NIMBLE)
 
+  BLEDevice::setSecurityAuth(true, true, true);
+
+#else
+
+  BLESecurity* pSecurity = new BLESecurity();
   pSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
+
+#endif // USE_NIMBLE
 
   bleKeyboardInstance->hid->reportMap((uint8_t*)_hidReportDescriptor, sizeof(_hidReportDescriptor));
   bleKeyboardInstance->hid->startServices();
@@ -204,6 +221,10 @@ void BleComboKeyboard::sendReport(KeyReport* keys)
   {
     this->inputKeyboard->setValue((uint8_t*)keys, sizeof(KeyReport));
     this->inputKeyboard->notify();
+#if defined(USE_NIMBLE)
+    // vTaskDelay(delayTicks);
+    this->delay_ms(_delay_ms);
+#endif // USE_NIMBLE
   }
 }
 
@@ -213,6 +234,10 @@ void BleComboKeyboard::sendReport(MediaKeyReport* keys)
   {
     this->inputMediaKeys->setValue((uint8_t*)keys, sizeof(MediaKeyReport));
     this->inputMediaKeys->notify();
+#if defined(USE_NIMBLE)
+    //vTaskDelay(delayTicks);
+    this->delay_ms(_delay_ms);
+#endif // USE_NIMBLE
   }
 }
 
@@ -503,3 +528,13 @@ size_t BleComboKeyboard::write(const uint8_t *buffer, size_t size) {
 	return n;
 }
 
+void BleComboKeyboard::delay_ms(uint64_t ms) {
+  uint64_t m = esp_timer_get_time();
+  if(ms){
+    uint64_t e = (m + (ms * 1000));
+    if(m > e){ //overflow
+        while(esp_timer_get_time() > e) { }
+    }
+    while(esp_timer_get_time() < e) {}
+  }
+}

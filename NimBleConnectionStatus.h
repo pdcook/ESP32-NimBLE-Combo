@@ -1,12 +1,16 @@
 #define USE_NIMBLE
 
-#ifndef ESP32_BLE_KEYBOARD_OUTPUT_CALLBACKS_H
-#define ESP32_BLE_KEYBOARD_OUTPUT_CALLBACKS_H
+#ifndef ESP32_BLE_CONNECTION_STATUS_H
+#define ESP32_BLE_CONNECTION_STATUS_H
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
 #if defined(USE_NIMBLE)
 
+#include "nimconfig.h"
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
+#include <NimBLEDevice.h>
 #include <NimBLEServer.h>
 #include "NimBLECharacteristic.h"
 
@@ -18,6 +22,8 @@
 #define BLEAdvertising             NimBLEAdvertising
 #define BLEServer                  NimBLEServer
 
+#endif // CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+
 #else
 
 #include <BLEServer.h>
@@ -26,12 +32,17 @@
 
 #endif // USE_NIMBLE
 
-class KeyboardOutputCallbacks : public BLECharacteristicCallbacks
+class BleConnectionStatus : public BLEServerCallbacks
 {
 public:
-  KeyboardOutputCallbacks(void);
-  void onWrite(BLECharacteristic* me);
+  BleConnectionStatus(void);
+  bool connected = false;
+  void onConnect(BLEServer* pServer);
+  void onDisconnect(BLEServer* pServer);
+  BLECharacteristic* inputKeyboard;
+  BLECharacteristic* outputKeyboard;
+  BLECharacteristic* inputMouse;
 };
 
 #endif // CONFIG_BT_ENABLED
-#endif // ESP32_BLE_KEYBOARD_OUTPUT_CALLBACKS_H
+#endif // ESP32_BLE_CONNECTION_STATUS_H

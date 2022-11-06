@@ -1,13 +1,32 @@
+#define USE_NIMBLE
+
 #ifndef ESP32_BLE_COMBO_KEYBOARD_H
 #define ESP32_BLE_COMBO_KEYBOARD_H
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "BleConnectionStatus.h"
+#if defined(USE_NIMBLE)
+
+#include "NimBLECharacteristic.h"
+#include "NimBLEHIDDevice.h"
+
+#define BLEDevice                  NimBLEDevice
+#define BLEServerCallbacks         NimBLEServerCallbacks
+#define BLECharacteristicCallbacks NimBLECharacteristicCallbacks
+#define BLEHIDDevice               NimBLEHIDDevice
+#define BLECharacteristic          NimBLECharacteristic
+#define BLEAdvertising             NimBLEAdvertising
+#define BLEServer                  NimBLEServer
+
+#else
+
 #include "BLEHIDDevice.h"
 #include "BLECharacteristic.h"
-#include "Print.h"
 
+#endif // USE_NIMBLE
+
+#include "NimBleConnectionStatus.h"
+#include "Print.h"
 
 const uint8_t KEY_LEFT_CTRL = 0x80;
 const uint8_t KEY_LEFT_SHIFT = 0x81;
@@ -98,6 +117,8 @@ private:
   KeyReport _keyReport;
   MediaKeyReport _mediaKeyReport;
   static void taskServer(void* pvParameter);
+  uint32_t           _delay_ms = 7;
+  void delay_ms(uint64_t ms);
 
 public:
   BleComboKeyboard(std::string deviceName = "ESP32 Keyboard/Mouse", std::string deviceManufacturer = "Espressif", uint8_t batteryLevel = 100);
